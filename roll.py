@@ -20,7 +20,7 @@ def next_time_slice(t):
         return slices[slices.index(t) + 1]
     except IndexError, ValueError:
         return None
-    
+
 def merge(src, dest):
     class_path = 'solr/lib' # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
@@ -87,7 +87,7 @@ def make_solr_instance(path, port):
 def make_rolling_index():
     port = SLAVE_START_PORT
     for ts in slices:
-        make_solr_instance(ts, port)
+        make_solr_instance('solr_' + ts, port)
         port += 1
 
 if __name__ == '__main__':
