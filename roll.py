@@ -3,7 +3,7 @@ Usage: fab -H localhost day/week/month/6months
 from solr home - where example directory exists.
 """
 
-from fabric.api import run
+from fabric.api import run, sudo
 from urllib2 import URLError, urlopen
 from urlparse import urljoin
 import date, datetime
@@ -35,13 +35,13 @@ def manage_solr(path, action='start'):
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
         java_home = os.path.join(os.path.abspath(os.path.curdir), path)
-        run('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
+        sudo('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
 
     if action == 'restart':
-        run('service stop %s' % script_name)
-        run('service start %s' % script_name)
+        sudo('service stop %s' % script_name)
+        sudo('service start %s' % script_name)
     else:
-        run('service %s %s' % (action, script_name))
+        sudo('service %s %s' % (action, script_name))
 
 def hourend():
     """ For testing purposes. 
