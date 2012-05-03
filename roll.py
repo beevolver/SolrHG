@@ -10,7 +10,6 @@ import date, datetime
 import os
 
 INDEXDIR = 'solr/data/index/'
-SOLR_SLAVE_URL = 'http://localhost:9000/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
 upstart_prefix = 'solr_'
@@ -26,9 +25,6 @@ def merge(src, dest):
     class_path = 'solr/lib' # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
     run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(src)s %(dest)s' % locals())
-
-def commit():
-    run('curl %s' % urljoin(SOLR_SLAVE_URL, '/solr/update?commit=true'))
 
 def manage_solr(path, action='start'):
     if action not in ('start', 'stop', 'restart'):
