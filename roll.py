@@ -38,7 +38,7 @@ def manage_solr(path, action='start'):
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
         java_home = os.path.join(os.path.abspath(os.path.curdir), path)
-        run('perl -p -e s/SOLR_HOME/%s/g solr.conf >> %s' % (java_home, upstart_script))
+        run('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
 
     if action == 'restart':
         run('service stop %s' % script_name)
