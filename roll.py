@@ -12,6 +12,7 @@ import os
 INDEXDIR = 'solr/data/index/'
 SOLR_SLAVE_URL = 'http://localhost:9000/'
 MASTER_PORT = 8983
+SLAVE_START_PORT = 9000
 upstart_prefix = 'solr_'
 slices = []
 
@@ -88,7 +89,7 @@ def make_solr_instance(path, port):
     return manage_solr(path, action='start')
     
 def make_rolling_index():
-    port = 9000
+    port = SLAVE_START_PORT
     for ts in slices:
         make_solr_instance(ts, port)
         port += 1
