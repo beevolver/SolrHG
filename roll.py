@@ -24,6 +24,7 @@ def merge(src, dest):
     #merge src and dest into dest
     class_path = 'solr/lib' # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
+    run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
     return run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
 def merge_after(ts):
