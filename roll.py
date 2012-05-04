@@ -3,13 +3,12 @@ example usage: fab -H localhost 1h 3h 6h 1d
 from solr home - where example directory exists.
 """
 
-from fabric.api import run, sudo
-import os
+from fabric.api import run, sudo, abort
+import os, re
 
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
-upstart_prefix = 'solr_'
 # slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
@@ -44,7 +43,7 @@ def manage_solr(path, action='start'):
     if action not in ('start', 'stop', 'restart'):
         print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
         return 1
-    script_name = upstart_prefix + os.path.basename(path)
+    script_name = os.path.basename(path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
@@ -61,25 +60,25 @@ def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
         cmd = "fab -H localhost /path/to/this/file merge_after:%s" % ts
-        a = re.match(ts)
+        a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
         if period == 'h':
-            d['hour'] = '*/%d' % number
+            d['hour'] = '*/%s' % number
         else:
-            d['hour'] = 0
+            d['hour'] = '0'
             if period == 'd':
-                d['day'] = '*/%d' % number
+                d['day'] = '*/%s' % number
             elif period == 'm':
                 d['day'] = '1'
-                d['month'] = '*/%d' % number
+                d['month'] = '*/%s' % number
             # mulitple weeks is not supported for now
             elif ts == '1w':
-                d['dow'] = 6    #sat midnight (sun-sat 0-6)
-        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], cmd)
+                d['dow'] = '6'    #sat midnight (sun-sat 0-6)
+        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], cmd])
 
-        for ts in slices[:-1]:
-            hash_bang = '#!/bin/bash\n'
-            sudo("echo %s >> /etc/cron.d/cron_%s", hash_bang + create_cron_line(ts), ts)
+    for ts in slices[:-1]:
+        hash_bang = '#!/bin/bash\n'
+        sudo("echo %s >> /etc/cron.d/cron_%s", hash_bang + create_cron_line(ts), ts)
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
@@ -107,17 +106,17 @@ def make_solr_instance(path, port):
     return manage_solr(path, action='start')
     
 def make_rolling_index():
-    make_solr_instance('solr_' + slices[0], master_port)
+    make_solr_instance('solr_' + slices[0], MASTER_PORT)
     port = SLAVE_START_PORT
     for ts in slices[1:]:
         make_solr_instance('solr_' + ts, port)
         port += 1
+    create_cron_jobs()
 
 if __name__ == '__main__':
     import sys
     if not sys.argv[1:]:
-        return usage()
-    
-    global slices
+        usage()
+        abort(1)
     slices = get_timeslices(sys.argv[1:])
-    return make_rolling_index() 
+    make_rolling_index()
