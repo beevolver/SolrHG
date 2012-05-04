@@ -4,15 +4,13 @@ from solr home - where example directory exists.
 """
 
 from fabric.api import run, sudo
-from urllib2 import URLError, urlopen
-from urlparse import urljoin
-import date, datetime
 import os
 
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
 upstart_prefix = 'solr_'
+# slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
 
@@ -32,7 +30,14 @@ def merge_after(ts):
     get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
     src = get_index_path(ts)
     dest = get_index_path(next_time_slice(ts))
-    return merge(src, dest)
+
+    if ts == slices[0]:
+        #if the slice is the master solr, take all subdirs of index to merge.
+        src = os.path.join(src, '*')
+    # there's nothing to merge if the timeslice is logically the last
+    # todo: should remove the index in that case
+    if ts != slices[-1]:
+        return merge(src, dest)
 
 def manage_solr(path, action='start'):
     if action not in ('start', 'stop', 'restart'):
@@ -71,7 +76,7 @@ def create_cron_jobs():
                 d['dow'] = 6    #sat midnight (sun-sat 0-6)
         return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], cmd)
 
-        for ts in slices:
+        for ts in slices[:-1]:
             hash_bang = '#!/bin/bash\n'
             sudo("echo %s >> /etc/cron.d/cron_%s", hash_bang + create_cron_line(ts), ts)
 
@@ -94,12 +99,16 @@ def make_solr_instance(path, port):
     run('mkdir -p %s' % path)
     run('cp -r example %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/solr/etc/jetty.xml' % locals())
-    run('cp non_hg_solrconfig.xml %s/solr/conf/solrconfig.xml')
+    if port == master_port:
+        run('cp solrconfig.xml %s/solr/conf/solrconfig.xml')
+    else:
+        run('cp non_hg_solrconfig.xml %s/solr/conf/solrconfig.xml')
     return manage_solr(path, action='start')
     
 def make_rolling_index():
+    make_solr_instance('solr_' + slices[0], master_port)
     port = SLAVE_START_PORT
-    for ts in slices:
+    for ts in slices[1:]:
         make_solr_instance('solr_' + ts, port)
         port += 1
 
