@@ -1,5 +1,5 @@
 """
-Usage: fab -H localhost day/week/month/6months
+example usage: fab -H localhost 1h 3h 6h 1d
 from solr home - where example directory exists.
 """
 
@@ -14,6 +14,7 @@ MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
 upstart_prefix = 'solr_'
 slices = []
+re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
 
 def next_time_slice(t):
     try:
@@ -22,9 +23,16 @@ def next_time_slice(t):
         return None
 
 def merge(src, dest):
+    #merge src and dest into dest
     class_path = 'solr/lib' # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
-    run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(src)s %(dest)s' % locals())
+    return run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
+
+def merge_after(ts):
+    get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
+    src = get_index_path(ts)
+    dest = get_index_path(next_time_slice(ts))
+    return merge(src, dest)
 
 def manage_solr(path, action='start'):
     if action not in ('start', 'stop', 'restart'):
@@ -43,36 +51,41 @@ def manage_solr(path, action='start'):
     else:
         sudo('service %s %s' % (action, script_name))
 
-def hourend():
-    """ For testing purposes. 
-        Merge this houroday's data with tweek's (Sun-Sat) data - before the hourglass roll happens
-        call me in mid night of every day"""
-    pass
+def create_cron_jobs():
+    def create_cron_line(ts):
+        d = dict(min='0', hour='*', day='*', month='*', dow='*')
+        cmd = "fab -H localhost /path/to/this/file merge_after:%s" % ts
+        a = re.match(ts)
+        number, period = a.group('number'), a.group('period')
+        if period == 'h':
+            d['hour'] = '*/%d' % number
+        else:
+            d['hour'] = 0
+            if period == 'd':
+                d['day'] = '*/%d' % number
+            elif period == 'm':
+                d['day'] = '1'
+                d['month'] = '*/%d' % number
+            # mulitple weeks is not supported for now
+            elif ts == '1w':
+                d['dow'] = 6    #sat midnight (sun-sat 0-6)
+        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], cmd)
 
-def dayend():
-    """ Merge today's data with this week's (Sun-Sat) data - before the hourglass roll happens
-        call me in mid night of every day"""
-    pass
-
-def weekend():
-    """ Merge this week's data with this month's data - before the hourglass roll happens
-        Every saturday midnight, call me."""
-    pass
-
-def monthend():
-    pass
+        for ts in slices:
+            hash_bang = '#!/bin/bash\n'
+            sudo("echo %s >> /etc/cron.d/cron_%s", hash_bang + create_cron_line(ts), ts)
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
-    print 'where is argument is of the form <N><h/d/w/m/y>'
-    print 'N an integer and "h" for hour, "d" for "day", "w" for week, "m" for month and "y" for year'
-    print 'example: %s 1h 6h 12h 1d 1w' % sys.argv[0]
+    print >> sys.stderr, 'where is argument is of the form <N><h/d/w/m>'
+    print >> sys.stderr, 'N an integer and "h" for hour, "d" for "day", "w" for week, "m" for month'
+    print >> sys.stderr, 'example: %s 1h 6h 12h 1d 1w' % sys.argv[0]
     return 1
 
 def get_timeslices(args):
     for arg in args:
-        matched = re.match(r"(?P<number>\d+)(?P<period>[hdwmyHDWMY]{1})$", arg)
-        if not matched or matched.group(0) is not arg or matched.group('period') not in allowed_ts:
+        matched = re.match(re_ts, arg)
+        if not matched or matched.group(0) is not arg:
             return usage()
     return args
 
