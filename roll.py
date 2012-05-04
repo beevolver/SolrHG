@@ -101,9 +101,9 @@ def make_solr_instance(path, port):
     run('cp -r example %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/solr/etc/jetty.xml' % locals())
     if port == master_port:
-        run('cp solrconfig.xml %s/solr/conf/solrconfig.xml')
+        run('cp conf/solrconfig.xml %s/solr/conf/solrconfig.xml')
     else:
-        run('cp non_hg_solrconfig.xml %s/solr/conf/solrconfig.xml')
+        run('cp conf/non_hg_solrconfig.xml %s/solr/conf/solrconfig.xml')
     return manage_solr(path, action='start')
     
 def make_rolling_index():
