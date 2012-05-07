@@ -99,7 +99,7 @@ def get_timeslices(args):
 def make_solr_instance(path, port):
     master_port = MASTER_PORT
     run('mkdir -p %s' % path)
-    run('cp -r example/ %s' % path)
+    run('cp -R example/ %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/solr/etc/jetty.xml' % locals())
     if port == master_port:
         put('conf/solrconfig.xml', '%s/solr/conf/solrconfig.xml' % path)
