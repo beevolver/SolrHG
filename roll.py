@@ -1,11 +1,13 @@
 """
-example usage: fab -H localhost 1h 3h 6h 1d
+example usage: fab -H localhost 1h 1d 1m
 from solr home - where example directory exists.
 """
 
-from fabric.api import run, sudo, abort
+from fabric.api import run, sudo, abort, cd
+from fabric.operations import put
 import os, re
 
+EXAMPLE_PATH = '/mnt/apache-solr-3.5.0'
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
@@ -97,26 +99,28 @@ def get_timeslices(args):
 def make_solr_instance(path, port):
     master_port = MASTER_PORT
     run('mkdir -p %s' % path)
-    run('cp -r example %s' % path)
+    run('cp -r example/ %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/solr/etc/jetty.xml' % locals())
     if port == master_port:
-        run('cp conf/solrconfig.xml %s/solr/conf/solrconfig.xml' % path)
+        put('conf/solrconfig.xml', '%s/solr/conf/solrconfig.xml' % path)
     else:
-        run('cp conf/non_hg_solrconfig.xml %s/solr/conf/solrconfig.xml' % path)
+        put('conf/non_hg_solrconfig.xml', '%s/solr/conf/solrconfig.xml' % path)
     return manage_solr(path, action='start')
     
-def make_rolling_index():
-    make_solr_instance('solr_' + slices[0], MASTER_PORT)
-    port = SLAVE_START_PORT
-    for ts in slices[1:]:
-        make_solr_instance('solr_' + ts, port)
-        port += 1
-    create_cron_jobs()
+def make_rolling_index(*argv):
+    global slices
+    slices = get_timeslices(argv)
+    with cd(EXAMPLE_PATH):
+        make_solr_instance('solr_' + slices[0], MASTER_PORT)
+        port = SLAVE_START_PORT
+        for ts in slices[1:]:
+            make_solr_instance('solr_' + ts, port)
+            port += 1
+        create_cron_jobs()
 
 if __name__ == '__main__':
     import sys
     if not sys.argv[1:]:
         usage()
         abort(1)
-    slices = get_timeslices(sys.argv[1:])
-    make_rolling_index()
+    make_rolling_index(sys.argv[1:])
