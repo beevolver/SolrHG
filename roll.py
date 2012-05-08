@@ -3,7 +3,7 @@ example usage: fab -H localhost 1h 1d 1m
 from solr home - where example directory exists.
 """
 
-from fabric.api import run, sudo, abort, cd
+from fabric.api import run, sudo, abort, cd, task
 from fabric.operations import put
 import os, re
 
@@ -28,6 +28,7 @@ def merge(src, dest):
     run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
     return run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
+@task
 def merge_after(ts):
     get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
     src = get_index_path(ts)
@@ -41,6 +42,7 @@ def merge_after(ts):
     if ts != slices[-1]:
         return merge(src, dest)
 
+@task
 def manage_solr(path, action='start'):
     if action not in ('start', 'stop', 'restart'):
         print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
@@ -106,7 +108,8 @@ def make_solr_instance(path, port):
     else:
         put('conf/non_hg_solrconfig.xml', '%s/solr/conf/solrconfig.xml' % path)
     return manage_solr(path, action='start')
-    
+
+@task
 def make_rolling_index(*argv):
     global slices
     slices = get_timeslices(argv)
