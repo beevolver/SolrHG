@@ -63,7 +63,7 @@ def manage_solr(path, action='start'):
 def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
-        cmd = "fab -H localhost /path/to/this/file merge_after:%s" % ts
+        cmd = "fab -H localhost %s/roll.py merge_after:%s" % run('pwd'), ts
         a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
         if period == 'h':
@@ -98,17 +98,24 @@ def get_timeslices(args):
             return usage()
     return args
 
+def upload_files(path):
+    # upload all the necessary files
+    put('solr.conf.sh', 'solr.conf.sh')
+    put('roll.py', 'roll.py')
+
+    solrconf_path = '%s/solr/conf/' % path
+    put('conf/schema.xml', solrconf_path)
+    if port == master_port:
+        put('conf/solrconfig.xml', solrconf_path)
+    else:
+        put('conf/non_hg_solrconfig.xml', os.path.join(solrconf_path, 'solrconfig.xml'))
+
 def make_solr_instance(path, port):
     master_port = MASTER_PORT
     run('mkdir -p %s' % path)
     run('cp -R example/* %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/etc/jetty.xml' % locals())
-    solrconfig = '%s/solr/conf/' % path
-    if port == master_port:
-        put('conf/solrconfig.xml', solrconfig)
-    else:
-        put('conf/non_hg_solrconfig.xml', solrconfig)
-    put('solr.conf.sh', 'solr.conf.sh')
+    upload_files(path)
     return manage_solr(path, action='start')
 
 @task
