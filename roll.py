@@ -82,7 +82,7 @@ def create_cron_jobs():
 
     for ts in slices[:-1]:
         hash_bang = '#!/bin/bash\n'
-        sudo("echo %s >> /etc/cron.d/cron_%s" % (hash_bang + create_cron_line(ts), ts))
+        sudo("echo '%s' >> /etc/cron.d/solr_%s" % (hash_bang + create_cron_line(ts), ts))
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
