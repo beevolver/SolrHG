@@ -52,7 +52,7 @@ def manage_solr(path, action='start'):
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
         java_home = os.path.join(run('pwd'), path)
-        sudo('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
+        sudo('bash solr.conf.sh %s > %s' % (java_home, upstart_script))
 
     if action == 'restart':
         sudo('service %s stop' % script_name)
@@ -63,7 +63,7 @@ def manage_solr(path, action='start'):
 def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
-        cmd = "fab -H localhost %s/roll.py merge_after:%s" % run('pwd'), ts
+        cmd = "fab -H localhost %s/roll.py merge_after:%s" % (run('pwd'), ts)
         a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
         if period == 'h':
@@ -82,7 +82,7 @@ def create_cron_jobs():
 
     for ts in slices[:-1]:
         hash_bang = '#!/bin/bash\n'
-        sudo("echo '%s' >> /etc/cron.d/solr_%s" % (hash_bang + create_cron_line(ts), ts))
+        sudo("echo '%s' > /etc/cron.d/solr_%s" % (hash_bang + create_cron_line(ts), ts))
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
@@ -105,7 +105,7 @@ def upload_files(path):
 
     solrconf_path = '%s/solr/conf/' % path
     put('conf/schema.xml', solrconf_path)
-    if port == master_port:
+    if path.endswith(slices[0]): # master/writer solr
         put('conf/solrconfig.xml', solrconf_path)
         put('vendor/lib', '%s/solr/' % path)
     else:
