@@ -56,10 +56,10 @@ def manage_solr(path, action='start'):
         sudo('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
 
     if action == 'restart':
-        sudo('service stop %s' % script_name)
-        sudo('service start %s' % script_name)
+        sudo('service %s stop' % script_name)
+        sudo('service %s start' % script_name)
     else:
-        sudo('service %s %s' % (action, script_name))
+        sudo('service %s %s' % (script_name, action))
 
 def create_cron_jobs():
     def create_cron_line(ts):
