@@ -51,8 +51,7 @@ def manage_solr(path, action='start'):
     upstart_script = "/etc/init/%s.conf" % (script_name)
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
-        java_home = os.path.join(os.path.abspath(os.path.curdir), path)
-        put('solr.conf.sh', 'solr.conf.sh')
+        java_home = os.path.join(run('pwd'), path)
         sudo('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
 
     if action == 'restart':
@@ -83,7 +82,7 @@ def create_cron_jobs():
 
     for ts in slices[:-1]:
         hash_bang = '#!/bin/bash\n'
-        sudo("echo %s >> /etc/cron.d/cron_%s", hash_bang + create_cron_line(ts), ts)
+        sudo("echo %s >> /etc/cron.d/cron_%s" % (hash_bang + create_cron_line(ts), ts))
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
@@ -105,11 +104,11 @@ def make_solr_instance(path, port):
     run('cp -R example/* %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/etc/jetty.xml' % locals())
     solrconfig = '%s/solr/conf/' % path
-    print solrconfig, 'SOLRCONFIG'
     if port == master_port:
         put('conf/solrconfig.xml', solrconfig)
     else:
         put('conf/non_hg_solrconfig.xml', solrconfig)
+    put('solr.conf.sh', 'solr.conf.sh')
     return manage_solr(path, action='start')
 
 @task
