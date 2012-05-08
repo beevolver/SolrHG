@@ -52,6 +52,7 @@ def manage_solr(path, action='start'):
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
         java_home = os.path.join(os.path.abspath(os.path.curdir), path)
+        put('solr.conf.sh', 'solr.conf.sh')
         sudo('bash solr.conf.sh %s >> %s' % (java_home, upstart_script))
 
     if action == 'restart':
@@ -101,12 +102,14 @@ def get_timeslices(args):
 def make_solr_instance(path, port):
     master_port = MASTER_PORT
     run('mkdir -p %s' % path)
-    run('cp -R example/ %s' % path)
-    run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/solr/etc/jetty.xml' % locals())
+    run('cp -R example/* %s' % path)
+    run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/etc/jetty.xml' % locals())
+    solrconfig = '%s/solr/conf/' % path
+    print solrconfig, 'SOLRCONFIG'
     if port == master_port:
-        put('conf/solrconfig.xml', '%s/solr/conf/solrconfig.xml' % path)
+        put('conf/solrconfig.xml', solrconfig)
     else:
-        put('conf/non_hg_solrconfig.xml', '%s/solr/conf/solrconfig.xml' % path)
+        put('conf/non_hg_solrconfig.xml', solrconfig)
     return manage_solr(path, action='start')
 
 @task
