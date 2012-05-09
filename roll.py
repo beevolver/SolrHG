@@ -11,6 +11,7 @@ EXAMPLE_PATH = '/mnt/apache-solr-3.5.0'
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
+LOG_FILE = "/var/log/messages"
 # slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
@@ -25,8 +26,9 @@ def merge(src, dest):
     #merge src and dest into dest
     class_path = 'solr/lib' # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
+    redirect_logs = ">> %s 2>&1" % LOG_FILE
     run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
-    return run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
+    return run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s %(redirect_logs)s' % locals())
 
 @task
 def merge_after(ts):
@@ -64,6 +66,7 @@ def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
         cmd = "fab -H localhost %s/roll.py merge_after:%s" % (run('pwd'), ts)
+        redirect_logs = ">> %s 2>&1" % LOG_FILE
         user = 'root'
         a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
@@ -79,7 +82,7 @@ def create_cron_jobs():
             # mulitple weeks is not supported for now
             elif ts == '1w':
                 d['dow'] = '6'    #sat midnight (sun-sat 0-6)
-        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd])
+        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd, redirect_logs])
 
     for ts in slices[:-1]:
         sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
