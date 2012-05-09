@@ -64,6 +64,7 @@ def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
         cmd = "fab -H localhost %s/roll.py merge_after:%s" % (run('pwd'), ts)
+        user = 'root'
         a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
         if period == 'h':
@@ -78,11 +79,10 @@ def create_cron_jobs():
             # mulitple weeks is not supported for now
             elif ts == '1w':
                 d['dow'] = '6'    #sat midnight (sun-sat 0-6)
-        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], cmd])
+        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd])
 
     for ts in slices[:-1]:
-        hash_bang = '#!/bin/bash\n'
-        sudo("echo '%s' > /etc/cron.d/solr_%s" % (hash_bang + create_cron_line(ts), ts))
+        sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
