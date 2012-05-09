@@ -11,7 +11,7 @@ EXAMPLE_PATH = '/mnt/apache-solr-3.5.0'
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
-LOG_FILE = "/var/log/messages"
+LOG_FILE = "/var/log/solrhg" 
 # slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
