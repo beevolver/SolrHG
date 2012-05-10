@@ -24,25 +24,26 @@ def next_time_slice(t):
 
 def merge(src, dest):
     #merge src and dest into dest
-    class_path = 'solr/lib' # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
     redirect_logs = ">> %s 2>&1" % LOG_FILE
     run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
     return run('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
-@task
-def merge_after(ts):
-    get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
-    src = get_index_path(ts)
-    dest = get_index_path(next_time_slice(ts))
+def has_subdirs(path):
+    return any(os.path.isdir(os.path.join(path, x)) for x in os.listdir(path) if not x.startswith('.'))
 
-    if ts == slices[0]:
-        #if the slice is the master solr, take all subdirs of index to merge.
+@task
+def merge_slices(ts1, ts2):
+    get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
+    get_lib_path = lambda t: os.path.join('solr_%s' % t, 'solr/lib/') # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
+    src, dest = get_index_path(ts1), get_index_path(ts2)
+
+    # if src has sub dirs (which are created by hourglass), take the subdirs
+    if has_subdirs(src):
         src = os.path.join(src, '*')
     # there's nothing to merge if the timeslice is logically the last
     # todo: should remove the index in that case
-    if ts != slices[-1]:
-        return merge(src, dest)
+    return merge(src, dest, class_path=get_lib_path(ts))
 
 @task
 def manage_solr(path, action='start'):
@@ -65,7 +66,7 @@ def manage_solr(path, action='start'):
 def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
-        cmd = "fab -H localhost %s/roll.py merge_after:%s" % (run('pwd'), ts)
+        cmd = "fab -H localhost -f %s/roll.py merge_slices:%s,%s" % (run('pwd'), ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         user = 'root'
         a = re.match(re_ts, ts)
