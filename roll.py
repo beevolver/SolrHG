@@ -22,28 +22,29 @@ def next_time_slice(t):
     except IndexError, ValueError:
         return None
 
-def merge(src, dest):
+def merge(src, dest, class_path):
     #merge src and dest into dest
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
     redirect_logs = ">> %s 2>&1" % LOG_FILE
     run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
     return run('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
-def has_subdirs(path):
-    return any(os.path.isdir(os.path.join(path, x)) for x in os.listdir(path) if not x.startswith('.'))
+def get_subdirs(path):
+    return [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x)) and not x.startswith('.')]
 
 @task
 def merge_slices(ts1, ts2):
     get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
-    get_lib_path = lambda t: os.path.join('solr_%s' % t, 'solr/lib/') # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
+    get_lib_path = lambda t: os.path.join('solr_%s' % t, 'solr/lib') # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     src, dest = get_index_path(ts1), get_index_path(ts2)
 
     # if src has sub dirs (which are created by hourglass), take the subdirs
-    if has_subdirs(src):
-        src = os.path.join(src, '*')
+    subdirs = get_subdirs(src)
+    if subdirs:
+        src = ' '.join([os.path.join(src, subdir) for subdir in subdirs])
     # there's nothing to merge if the timeslice is logically the last
     # todo: should remove the index in that case
-    return merge(src, dest, class_path=get_lib_path(ts))
+    return merge(src, dest, class_path=get_lib_path(ts1))
 
 @task
 def manage_solr(path, action='start'):
