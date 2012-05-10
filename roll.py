@@ -28,7 +28,7 @@ def merge(src, dest):
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
     redirect_logs = ">> %s 2>&1" % LOG_FILE
     run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
-    return run('java -cp %(classpath)s/lucene-core-3.5.0.jar:%(classpath)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s %(redirect_logs)s' % locals())
+    return run('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
 @task
 def merge_after(ts):
