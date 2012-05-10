@@ -45,7 +45,8 @@ def merge_slices(ts1, ts2):
         src = ' '.join([os.path.join(src, subdir) for subdir in subdirs])
     # there's nothing to merge if the timeslice is logically the last
     # todo: should remove the index in that case
-    return merge(src, dest, class_path=get_lib_path(ts1))
+    merge(src, dest, class_path=get_lib_path(ts1))
+    return manage_solr(ts1, 'restart')
 
 @task
 def manage_solr(path, action='start'):
@@ -58,7 +59,6 @@ def manage_solr(path, action='start'):
     if not os.path.exists(upstart_script):
         java_home = os.path.join(run('pwd'), path)
         sudo('bash solr.conf.sh %s > %s' % (java_home, upstart_script))
-
     sudo('service %s %s' % (script_name, action))
 
 def create_cron_jobs():
