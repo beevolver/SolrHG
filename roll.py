@@ -134,6 +134,15 @@ def make_rolling_index(*argv):
             make_solr_instance('solr_' + ts, port)
             port += 1
         create_cron_jobs()
+@task
+def cleanup():
+    with cd(EXAMPLE_PATH):
+        solrs = [x for x in os.listdir('/etc/init/') if x.startswith('solr_')]
+        for s in solrs:
+            sudo('service %s stop' % s)
+            sudo('rm -rf %s' % s)
+            sudo('rm -f /etc/init/%s' % s)
+            sudo('rm -f /etc/cron.d/%s' % s)
 
 if __name__ == '__main__':
     import sys
