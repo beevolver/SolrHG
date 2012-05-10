@@ -27,7 +27,8 @@ def merge(src, dest, class_path):
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
     redirect_logs = ">> %s 2>&1" % LOG_FILE
     run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
-    return run('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
+    with cd(EXAMPLE_PATH):
+        return sudo('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
 def get_subdirs(path):
     return [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x)) and not x.startswith('.')]
