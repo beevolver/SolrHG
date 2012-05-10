@@ -47,7 +47,7 @@ def merge_slices(ts1, ts2):
     # there's nothing to merge if the timeslice is logically the last
     # todo: should remove the index in that case
     merge(src, dest, class_path=get_lib_path(ts1))
-    return manage_solr(ts1, 'restart')
+    return manage_solr('solr_' + ts2, 'restart')
 
 @task
 def manage_solr(path, action='start'):
