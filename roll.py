@@ -101,7 +101,7 @@ def get_timeslices(args):
             return usage()
     return args
 
-def upload_files(path):
+def upload_files(path, libs=True):
     # upload all the necessary files
     put('solr.conf.sh', 'solr.conf.sh')
     put('roll.py', 'roll.py')
@@ -110,7 +110,8 @@ def upload_files(path):
     put('conf/schema.xml', solrconf_path)
     if path.endswith(slices[0]): # master/writer solr
         put('conf/solrconfig.xml', solrconf_path)
-        put('vendor/lib', '%s/solr/' % path)
+        if libs:
+            put('vendor/lib', '%s/solr/' % path)
     else:
         put('conf/non_hg_solrconfig.xml', os.path.join(solrconf_path, 'solrconfig.xml'))
         run('ln -sf solr_%s/solr/lib %s/solr/lib' % (slices[0], path))
