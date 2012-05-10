@@ -64,7 +64,7 @@ def manage_solr(path, action='start'):
 def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
-        cmd = "fab -H localhost -f %s/roll.py merge_slices:%s,%s" % (run('pwd'), ts, next_time_slice(ts))
+        cmd = "fab -H localhost -i ~/.ssh/this.pem -f %s/roll.py merge_slices:%s,%s" % (run('pwd'), ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         user = 'root'
         a = re.match(re_ts, ts)
