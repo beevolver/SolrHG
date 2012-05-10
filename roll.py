@@ -56,11 +56,12 @@ def manage_solr(path, action='start'):
         return 1
     script_name = os.path.basename('solr_' + path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
-    # make an upstart script from the template solr.conf, if it doesn't exist
-    if not os.path.exists(upstart_script):
-        java_home = os.path.join(run('pwd'), path)
-        sudo('bash solr.conf.sh %s > %s' % (java_home, upstart_script))
-    sudo('service %s %s' % (script_name, action))
+    with cd(EXAMPLE_PATH):
+        # make an upstart script from the template solr.conf, if it doesn't exist
+        if not os.path.exists(upstart_script):
+            java_home = os.path.join(run('pwd'), path)
+            sudo('bash solr.conf.sh %s > %s' % (java_home, upstart_script))
+        sudo('service %s %s' % (script_name, action))
 
 def install_fab():
     sudo('pip install fabric')
