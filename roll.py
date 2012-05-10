@@ -11,7 +11,7 @@ EXAMPLE_PATH = '/mnt/apache-solr-3.5.0'
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
-LOG_FILE = "/var/log/solrhg" 
+LOG_FILE = "%s/solrhg.log" % EXAMPLE_PATH
 # slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
@@ -31,6 +31,7 @@ def merge(src, dest, class_path):
         return sudo('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
 def get_subdirs(path):
+    path = os.path.join(EXAMPLE_PATH, path)
     return [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x)) and not x.startswith('.')]
 
 @task
@@ -53,7 +54,7 @@ def manage_solr(path, action='start'):
     if action not in ('start', 'stop', 'restart'):
         print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
         return 1
-    script_name = os.path.basename(path)
+    script_name = os.path.basename('solr_' + path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
     # make an upstart script from the template solr.conf, if it doesn't exist
     if not os.path.exists(upstart_script):
@@ -61,10 +62,17 @@ def manage_solr(path, action='start'):
         sudo('bash solr.conf.sh %s > %s' % (java_home, upstart_script))
     sudo('service %s %s' % (script_name, action))
 
+def install_fab():
+    sudo('pip install fabric')
+
 def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
-        cmd = "fab -H localhost -i ~/.ssh/this.pem -f %s/roll.py merge_slices:%s,%s" % (run('pwd'), ts, next_time_slice(ts))
+        fab = run('which fab')
+        if not fab:
+            install_fab()
+            fab = run('which fab')
+        cmd = "%s -H localhost -i /home/ubuntu/.ssh/this.pem -f %s/roll.py merge_slices:%s,%s" % (fab, run('pwd'), ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         user = 'root'
         a = re.match(re_ts, ts)
