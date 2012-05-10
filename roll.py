@@ -73,9 +73,10 @@ def create_cron_jobs():
         if not fab:
             install_fab()
             fab = run('which fab')
-        cmd = "%s -H localhost -i /home/ubuntu/.ssh/this.pem -f %s/roll.py merge_slices:%s,%s" % (fab, run('pwd'), ts, next_time_slice(ts))
+        user = 'ubuntu'
+        pem = '/home/%s/.ssh/this.pem' % user
+        cmd = "%s -H localhost -i %s -f %s/roll.py merge_slices:%s,%s" % (fab, pem, run('pwd'), ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
-        user = 'root'
         a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
         if period == 'h':
