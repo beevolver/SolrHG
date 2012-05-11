@@ -94,7 +94,8 @@ def create_cron_jobs():
                 d['dow'] = '6'    #sat midnight (sun-sat 0-6)
         return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd, redirect_logs])
 
-    def get_delete_cmd(ts):
+    def get_last_slice_cron(ts):
+        # returns content to be put in cron file which deletes old records every midnight
         d = dict(weeks=0, days=0, hours=0)
         number, period = int(ts[:-1]), ts[-1]
         if period == 'h':
@@ -105,19 +106,22 @@ def create_cron_jobs():
             d['weeks'] = number
         else:
             d['days'] = number*30
-    
-        till = (datetime.now() - timedelta(**d)).isoformat() + 'Z'
-        query = '<delete><query>published_at:[* TO %s]</query></delete>' % till
+        
+        td = ', '.join(['%s=%s' % (k, v) for k, v in d.iteritems()])
+        query = '<delete><query>published_at:[* TO ${UNTIL}Z]</query></delete>'
         java = run('which java')
+        python = run('which python')
         cmd = "%s -jar -Ddata=args %s/exampledocs/post.jar '%s'" % (java, os.path.join(EXAMPLE_PATH, 'solr_'+ts), query)
-        return cmd
+        till = "from datetime import datetime, timedelta; print (datetime.now() - timedelta(%s)).isoformat()" % td
+        until = "UNTIL=`%s -c '%s'`\n" % (python, till)
+        cron_line = '0 0 * * * ubuntu %s' % cmd
+        return until + '\n' + cron_line
     
     for ts in slices[:-1]:
         sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
     # run delete every mid night in the last slice
     last = slices[:-1]
-    cron_line = '0 0 * * * ubuntu %s' % get_delete_cmd(last)
-    sudo("echo '%s' > /etc/cron.d/solr_%s" % (cron_line, last)
+    sudo("echo '%s' > /etc/cron.d/solr_%s" % (get_last_slice_cron(last), last)
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
