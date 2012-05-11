@@ -106,16 +106,9 @@ def create_cron_jobs():
             d['weeks'] = number
         else:
             d['days'] = number*30
-        
-        td = ', '.join(['%s=%s' % (k, v) for k, v in d.iteritems()])
-        query = '<delete><query>published_at:[* TO ${UNTIL}Z]</query></delete>'
-        java = run('which java')
-        python = run('which python')
-        cmd = "%s -jar -Ddata=args %s/exampledocs/post.jar '%s'" % (java, os.path.join(EXAMPLE_PATH, 'solr_'+ts), query)
-        till = "from datetime import datetime, timedelta; print (datetime.now() - timedelta(%s)).isoformat()" % td
-        until = "UNTIL=`%s -c '%s'`\n" % (python, till)
-        cron_line = '0 0 * * * ubuntu %s' % cmd
-        return until + '\n' + cron_line
+        # delete every mid-night
+        cron_line = '0 0 * * * ubuntu %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), d['hours'], d['days'], d['weeks'])
+        return cron_line
     
     for ts in slices[:-1]:
         sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
@@ -141,6 +134,7 @@ def upload_files(path, libs=True):
     # upload all the necessary files
     put('solr.conf.sh', 'solr.conf.sh')
     put('roll.py', 'roll.py')
+    put('delete.sh', 'delete.sh')
 
     solrconf_path = '%s/solr/conf/' % path
     put('conf/schema.xml', solrconf_path)
