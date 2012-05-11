@@ -106,8 +106,8 @@ def create_cron_jobs():
             d['weeks'] = number
         else:
             d['days'] = number*30
-        # delete every mid-night
-        cron_line = '0 0 * * * ubuntu %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), d['hours'], d['days'], d['weeks'])
+        # delete every saturday mid-night
+        cron_line = '0 0 * * 6 ubuntu %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), d['hours'], d['days'], d['weeks'])
         return cron_line
     
     for ts in slices[:-1]:
