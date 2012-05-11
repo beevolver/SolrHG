@@ -6,6 +6,7 @@ from solr home - where example directory exists.
 from fabric.api import run, sudo, abort, cd, task
 from fabric.operations import put
 import os, re
+from datetime import datetime, timedelta
 
 EXAMPLE_PATH = '/mnt/apache-solr-3.5.0'
 INDEXDIR = 'solr/data/index/'
@@ -93,8 +94,30 @@ def create_cron_jobs():
                 d['dow'] = '6'    #sat midnight (sun-sat 0-6)
         return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd, redirect_logs])
 
+    def get_delete_cmd(ts):
+        d = dict(weeks=0, days=0, hours=0)
+        number, period = int(ts[:-1]), ts[-1]
+        if period == 'h':
+            d['hours'] = number
+        elif ts[-1] == 'd':
+            d['days'] = number
+        elif ts[-1] == 'w':
+            d['weeks'] = number
+        else:
+            d['days'] = number*30
+    
+        till = (datetime.now() - timedelta(**d)).isoformat() + 'Z'
+        query = '<delete><query>published_at:[* TO %s]</query></delete>' % till
+        java = run('which java')
+        cmd = "%s -jar -Ddata=args %s/exampledocs/post.jar '%s'" % (java, os.path.join(EXAMPLE_PATH, 'solr_'+ts), query)
+        return cmd
+    
     for ts in slices[:-1]:
         sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
+    # run delete every mid night in the last slice
+    last = slices[:-1]
+    cron_line = '0 0 * * * ubuntu %s' % get_delete_cmd(last)
+    sudo("echo '%s' > /etc/cron.d/solr_%s" % (cron_line, last)
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
