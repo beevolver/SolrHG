@@ -1612,5 +1612,5 @@
  
 <zoie.hourglass.schedule>00 00 00</zoie.hourglass.schedule>  <!-- default: "00 00 00" -->
 <zoie.hourglass.freq>day</zoie.hourglass.freq>               <!-- default: "day", possible values: "day","min","hour" -->
-<zoie.hourglass.trimThreshold>7</zoie.hourglass.trimThreshold>  <!-- default: 7 -->
+<zoie.hourglass.trimThreshold>1</zoie.hourglass.trimThreshold>  <!-- default: 7 -->
 </config>
