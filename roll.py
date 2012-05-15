@@ -65,6 +65,8 @@ def manage_solr(path, action='start'):
         sudo('service %s %s' % (script_name, action))
 
 def install_fab():
+    # build-essentials
+    # python-dev-tools
     sudo('pip install fabric')
 
 def create_cron_jobs():
@@ -114,7 +116,7 @@ def create_cron_jobs():
         sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
     # run delete every mid night in the last slice
     last = slices[:-1]
-    sudo("echo '%s' > /etc/cron.d/solr_%s" % (get_last_slice_cron(last), last)
+    sudo("echo '%s' > /etc/cron.d/solr_%s" % (get_last_slice_cron(last), last))
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
@@ -132,6 +134,7 @@ def get_timeslices(args):
 
 def upload_files(path, libs=True):
     # upload all the necessary files
+    # apache-solr-3.5.0
     put('solr.conf.sh', 'solr.conf.sh')
     put('roll.py', 'roll.py')
     put('delete.sh', 'delete.sh')
