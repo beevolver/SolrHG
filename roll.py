@@ -23,6 +23,11 @@ def next_time_slice(t):
     except IndexError, ValueError:
         return None
 
+def memory_to_solr():
+    #/proc/meminfo has a line like - MemTotal:  509084 kB
+    parts = len(slices) + 1 # give equal memory to each slice and for OS
+    return run("cat /proc/meminfo | grep MemTotal | awk '{ print $(NF-1)/%d $NF }'" % parts)
+
 def merge(src, dest, class_path):
     #merge src and dest into dest
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
@@ -61,7 +66,7 @@ def manage_solr(path, action='start'):
         # make an upstart script from the template solr.conf, if it doesn't exist
         if not os.path.exists(upstart_script):
             java_home = os.path.join(run('pwd'), path)
-            sudo('bash solr.conf.sh %s > %s' % (java_home, upstart_script))
+            sudo('bash solr.conf.sh %s %s > %s' % (java_home, memory_to_solr(), upstart_script))
         sudo('service %s %s' % (script_name, action))
 
 def install_fab():

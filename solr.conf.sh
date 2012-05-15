@@ -2,6 +2,7 @@
 # usage: bash solr.conf.sh /path/to/solr/home
 
 SOLR_HOME=$1
+MEM=$2
 LOG_FILE="/var/log/`basename $SOLR_HOME`"
 cat<<END
 # upstart script to daemonize solr
@@ -19,5 +20,5 @@ stop on shutdown
 # Respawn the process on unexpected termination
 respawn
 
-exec /usr/bin/java -Dsolr.solr.home=$SOLR_HOME/solr -Djetty.home=$SOLR_HOME -jar $SOLR_HOME/start.jar >> $LOG_FILE 2>&1
+exec /usr/bin/java -mx${MEM} -Dsolr.solr.home=$SOLR_HOME/solr -Djetty.home=$SOLR_HOME -jar $SOLR_HOME/start.jar >> $LOG_FILE 2>&1
 END
