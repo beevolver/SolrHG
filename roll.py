@@ -65,8 +65,7 @@ def manage_solr(path, action='start'):
         sudo('service %s %s' % (script_name, action))
 
 def install_fab():
-    # build-essentials
-    # python-dev-tools
+    sudo('apt-get install build-essential python-dev python-pip')
     sudo('pip install fabric')
 
 def create_cron_jobs():
