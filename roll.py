@@ -170,13 +170,16 @@ def make_rolling_index(*argv):
         create_cron_jobs()
 @task
 def cleanup():
+    solrs = [x for x in run('ls /etc/init').split() if x.startswith('solr_')]
     with cd(EXAMPLE_PATH):
-        solrs = [x for x in os.listdir('/etc/init/') if x.startswith('solr_')]
-        for s in solrs:
+        for sconf in solrs:
+            s = sconf.replace('.conf', '')
             sudo('service %s stop' % s)
+            sudo('rm -f /etc/init/%s' % sconf)
             sudo('rm -rf %s' % s)
-            sudo('rm -f /etc/init/%s' % s)
             sudo('rm -f /etc/cron.d/%s' % s)
+            sudo('rm -f solrhg.log roll.py*')
+            sudo('rm -f /var/log/%s' % s)
 
 if __name__ == '__main__':
     import sys
