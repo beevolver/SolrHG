@@ -3,7 +3,7 @@ example usage: fab -H localhost 1h 1d 1m
 from solr home - where example directory exists.
 """
 
-from fabric.api import run, sudo, abort, cd, task
+from fabric.api import run, sudo, abort, cd, task, local
 from fabric.operations import put
 import os, re
 from datetime import datetime, timedelta
@@ -27,9 +27,9 @@ def merge(src, dest, class_path):
     #merge src and dest into dest
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
     redirect_logs = ">> %s 2>&1" % LOG_FILE
-    run("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
+    local("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
     with cd(EXAMPLE_PATH):
-        return sudo('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
+        return local('java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
 
 def get_subdirs(path):
     path = os.path.join(EXAMPLE_PATH, path)
@@ -77,8 +77,7 @@ def create_cron_jobs():
             install_fab()
             fab = run('which fab')
         user = 'ubuntu'
-        pem = '/home/%s/.ssh/this.pem' % user
-        cmd = "%s -H localhost -i %s -f %s/roll.py merge_slices:%s,%s" % (fab, pem, run('pwd'), ts, next_time_slice(ts))
+        cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         a = re.match(re_ts, ts)
         number, period = a.group('number'), a.group('period')
