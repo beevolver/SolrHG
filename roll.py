@@ -100,6 +100,12 @@ def create_cron_jobs():
             # mulitple weeks is not supported for now
             elif ts == '1w':
                 d['dow'] = '6'    #sat midnight (sun-sat 0-6)
+        
+        # add 1 hour lag for the merges so that they happen one after the other,
+        # merge to the last slice being first.
+        if d['hour'] == '0':
+            d['hour'] = str(len(slices) - slices.index(ts))
+        
         return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd, redirect_logs])
 
     def get_last_slice_cron(ts):
