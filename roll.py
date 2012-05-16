@@ -53,9 +53,11 @@ def merge_slices(ts1, ts2):
     subdirs = get_subdirs(src)
     if subdirs:
         src = ' '.join([os.path.join(src, subdir) for subdir in subdirs])
-    # there's nothing to merge if the timeslice is logically the last
-    # todo: should remove the index in that case
-    merge(src, dest, class_path=get_lib_path(ts1))
+    
+    # if merge is successful, delete the source and restart the src solr
+    if merge(src, dest, class_path=get_lib_path(ts1)):
+        local('rm -rf %s' % src)
+        manage_solr('solr_' + ts1, 'restart')
     return manage_solr('solr_' + ts2, 'restart')
 
 @task
