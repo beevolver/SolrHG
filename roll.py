@@ -17,6 +17,9 @@ LOG_FILE = "%s/solrhg.log" % EXAMPLE_PATH
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
 
+def set_tz():
+    return "export TZ=US/Eastern\n"
+
 def next_time_slice(t):
     try:
         return slices[slices.index(t) + 1]
@@ -116,10 +119,10 @@ def create_cron_jobs():
         return cron_line
     
     for ts in slices[:-1]:
-        sudo("echo '%s' > /etc/cron.d/solr_%s" % (create_cron_line(ts), ts))
+        sudo("echo '%s' > /etc/cron.d/solr_%s" % (set_tz() + create_cron_line(ts), ts))
     # run delete every mid night in the last slice
     last = slices[:-1]
-    sudo("echo '%s' > /etc/cron.d/solr_%s" % (get_last_slice_cron(last), last))
+    sudo("echo '%s' > /etc/cron.d/solr_%s" % (set_tz() + get_last_slice_cron(last), last))
 
 def usage():
     print >> sys.stderr, 'Usage: %s arg1 arg2 [arg3...]' % sys.argv[0]
