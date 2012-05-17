@@ -129,7 +129,7 @@ def create_cron_jobs():
     for ts in slices[:-1]:
         sudo("echo '%s' > /etc/cron.d/solr_%s" % (set_tz() + create_cron_line(ts), ts))
     # run delete every mid night in the last slice
-    last = slices[:-1]
+    last = slices[-1]
     sudo("echo '%s' > /etc/cron.d/solr_%s" % (set_tz() + get_last_slice_cron(last), last))
 
 def usage():
