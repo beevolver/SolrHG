@@ -62,10 +62,11 @@ def merge_slices(ts1, ts2):
 
 @task
 def manage_solr(path, action='start'):
+    # path is like "solr_1h"
     if action not in ('start', 'stop', 'restart'):
         print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
         return 1
-    script_name = os.path.basename('solr_' + path)
+    script_name = os.path.basename(path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
     with cd(EXAMPLE_PATH):
         # make an upstart script from the template solr.conf, if it doesn't exist
