@@ -117,7 +117,7 @@ def create_cron_jobs():
 
     def get_last_slice_cron(ts):
         # returns content to be put in cron file which deletes old records every midnight
-        java_home = os.path.join(EXAMPLE_PATH, 'solr_%' % ts)
+        java_home = os.path.join(EXAMPLE_PATH, 'solr_%s' % ts)
         d = dict(weeks=0, days=0, hours=0)
         number, period = int(ts[:-1]), ts[-1]
         if period == 'h':
@@ -152,7 +152,7 @@ def get_timeslices(args):
             return usage()
     return args
 
-def upload_files(path, libs=True):
+def upload_files(path, libs=False):
     # upload all the necessary files
     # apache-solr-3.5.0
     put('solr.conf.sh', 'solr.conf.sh')
@@ -198,8 +198,8 @@ def cleanup():
             sudo('rm -f /etc/init/%s' % sconf)
             sudo('rm -rf %s' % s)
             sudo('rm -f /etc/cron.d/%s' % s)
-            sudo('rm -f solrhg.log roll.py*')
             sudo('rm -f /var/log/%s' % s)
+        sudo('rm -f solrhg.log roll.py*')
 
 if __name__ == '__main__':
     import sys
