@@ -49,10 +49,12 @@ def merge_slices(ts1, ts2):
     get_lib_path = lambda t: os.path.join('solr_%s' % t, 'solr/lib') # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     src, dest = get_index_path(ts1), get_index_path(ts2)
 
-    # if src has sub dirs (which are created by hourglass), take the subdirs
-    subdirs = get_subdirs(src)
-    if subdirs:
-        src = ' '.join([os.path.join(src, subdir) for subdir in subdirs])
+    # if there's "archive" dir in solr/data dir (created by hourglass), take subdirs as src or else solr/data/index
+    get_archive_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/archive')
+    archive = get_archive_path(ts1)
+    if os.path.exists(archive):
+        subdirs = get_subdirs(archive)
+        src = ' '.join([os.path.join(archive, subdir) for subdir in subdirs])
     
     # if merge is successful, delete the source and restart the src solr
     if merge(src, dest, class_path=get_lib_path(ts1)):
