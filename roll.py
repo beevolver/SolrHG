@@ -52,14 +52,16 @@ def merge_slices(ts1, ts2):
     # if there's "archive" dir in solr/data dir (created by hourglass), take subdirs as src or else solr/data/index
     get_archive_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/archive')
     archive = get_archive_path(ts1)
-    if os.path.exists(os.path.join(EXAMPLE_PATH, archive)):
+    is_master = os.path.exists(os.path.join(EXAMPLE_PATH, archive))
+    if is_master:
         subdirs = get_subdirs(archive)
         src = ' '.join([os.path.join(archive, subdir) for subdir in subdirs])
     
     # if merge is successful, delete the source and restart the src solr
     if merge(src, dest, class_path=get_lib_path(ts1)):
         local('rm -rf %s' % src)
-        manage_solr('solr_' + ts1, 'restart')
+        if not is_master:
+            manage_solr('solr_' + ts1, 'restart')
     return manage_solr('solr_' + ts2, 'restart')
 
 @task
