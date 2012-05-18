@@ -71,7 +71,7 @@ def manage_solr(path, action='start'):
     with cd(EXAMPLE_PATH):
         # make an upstart script from the template solr.conf, if it doesn't exist
         if not os.path.exists(upstart_script):
-            java_home = os.path.join(run('pwd'), path)
+            java_home = os.path.join(EXAMPLE_PATH, path)
             sudo('bash solr.conf.sh %s %s > %s' % (java_home, memory_to_solr(), upstart_script))
         sudo('service %s %s' % (script_name, action))
 
@@ -113,6 +113,7 @@ def create_cron_jobs():
 
     def get_last_slice_cron(ts):
         # returns content to be put in cron file which deletes old records every midnight
+        java_home = os.path.join(EXAMPLE_PATH, 'solr_%' % ts)
         d = dict(weeks=0, days=0, hours=0)
         number, period = int(ts[:-1]), ts[-1]
         if period == 'h':
@@ -124,7 +125,7 @@ def create_cron_jobs():
         else:
             d['days'] = number*30
         # delete every saturday mid-night
-        cron_line = '0 0 * * 6 ubuntu %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), d['hours'], d['days'], d['weeks'])
+        cron_line = '0 0 * * 6 ubuntu %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), java_home, d['hours'], d['days'], d['weeks'])
         return cron_line
     
     for ts in slices[:-1]:
