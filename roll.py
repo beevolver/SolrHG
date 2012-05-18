@@ -18,7 +18,7 @@ slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
 
 def set_tz():
-    return "export TZ=US/Eastern\n"
+    return "TZ=US/Eastern\n"
 
 def next_time_slice(t):
     try:
