@@ -118,6 +118,7 @@ def create_cron_jobs():
     def get_last_slice_cron(ts):
         # returns content to be put in cron file which deletes old records every midnight
         java_home = os.path.join(EXAMPLE_PATH, 'solr_%s' % ts)
+        redirect_logs = ">> %s 2>&1" % LOG_FILE
         d = dict(weeks=0, days=0, hours=0)
         number, period = int(ts[:-1]), ts[-1]
         if period == 'h':
@@ -129,7 +130,7 @@ def create_cron_jobs():
         else:
             d['days'] = number*30
         # delete every saturday mid-night
-        cron_line = '0 0 * * 6 ubuntu %s %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), java_home, d['hours'], d['days'], d['weeks'])
+        cron_line = '0 0 * * 6 ubuntu %s %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
         return cron_line
     
     for ts in slices[:-1]:
