@@ -3,7 +3,7 @@ example usage: fab -H localhost 1h 1d 1m
 from solr home - where example directory exists.
 """
 
-from fabric.api import run, sudo, abort, cd, task, local
+from fabric.api import run, sudo, abort, cd, task, local, lcd
 from fabric.operations import put
 import os, re
 from datetime import datetime, timedelta
