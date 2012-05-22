@@ -61,22 +61,24 @@ def merge_slices(ts1, ts2):
     if merge(src, dest, class_path=get_lib_path(ts1)):
         local('rm -rf %s' % src)
         if not is_master:
-            manage_solr('solr_' + ts1, 'restart')
-    return manage_solr('solr_' + ts2, 'restart')
+            manage_solr('solr_' + ts1, 'restart', host='local')
+    return manage_solr('solr_' + ts2, 'restart', host='local')
 
-def manage_solr(path, action='start'):
+def manage_solr(path, action='start', host=''):
     # path is like "solr_1h"
     if action not in ('start', 'stop', 'restart'):
         print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
         return 1
     script_name = os.path.basename(path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
-    with lcd(EXAMPLE_PATH):
-        # make an upstart script from the template solr.conf, if it doesn't exist
-        if not os.path.exists(upstart_script):
-            java_home = os.path.join(EXAMPLE_PATH, path)
-            local('sudo bash solr.conf.sh %s %s > %s' % (java_home, memory_to_solr(), upstart_script))
+    # make an upstart script from the template solr.conf, if it doesn't exist
+    if not os.path.exists(upstart_script):
+        java_home = os.path.join(EXAMPLE_PATH, path)
+        sudo('bash solr.conf.sh %s %s > %s' % (java_home, memory_to_solr(), upstart_script))
+    if host == 'local':
         local('sudo service %s %s' % (script_name, action))
+    else:
+        sudo('service %s %s' % (script_name, action))
 
 def install_fab():
     sudo('apt-get install build-essential python-dev python-pip')
