@@ -64,7 +64,6 @@ def merge_slices(ts1, ts2):
             manage_solr('solr_' + ts1, 'restart')
     return manage_solr('solr_' + ts2, 'restart')
 
-@task
 def manage_solr(path, action='start'):
     # path is like "solr_1h"
     if action not in ('start', 'stop', 'restart'):
@@ -72,12 +71,12 @@ def manage_solr(path, action='start'):
         return 1
     script_name = os.path.basename(path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
-    with cd(EXAMPLE_PATH):
+    with lcd(EXAMPLE_PATH):
         # make an upstart script from the template solr.conf, if it doesn't exist
         if not os.path.exists(upstart_script):
             java_home = os.path.join(EXAMPLE_PATH, path)
-            sudo('bash solr.conf.sh %s %s > %s' % (java_home, memory_to_solr(), upstart_script))
-        sudo('service %s %s' % (script_name, action))
+            local('sudo bash solr.conf.sh %s %s > %s' % (java_home, memory_to_solr(), upstart_script))
+        local('sudo service %s %s' % (script_name, action))
 
 def install_fab():
     sudo('apt-get install build-essential python-dev python-pip')
