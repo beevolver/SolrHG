@@ -57,12 +57,13 @@ def merge_slices(ts1, ts2):
         subdirs = get_subdirs(archive)
         src = ' '.join([os.path.join(archive, subdir) for subdir in subdirs])
     
-    # if merge is successful, delete the source and restart the src solr
-    if merge(src, dest, class_path=get_lib_path(ts1)):
+    # if merge is successful, delete the source and restart the solr
+    r = merge(src, dest, class_path=get_lib_path(ts1))
+    if r.succeeded:
         local('rm -rf %s' % src)
         if not is_master:
             manage_solr('solr_' + ts1, 'restart', host='local')
-    return manage_solr('solr_' + ts2, 'restart', host='local')
+        return manage_solr('solr_' + ts2, 'restart', host='local')
 
 def manage_solr(path, action='start', host=''):
     # path is like "solr_1h"
