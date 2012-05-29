@@ -60,6 +60,7 @@ def merge_slices(ts1, ts2):
     # if merge is successful, delete the source and restart the solr
     r = merge(src, dest, class_path=get_lib_path(ts1))
     if r.succeeded:
+        print "Issuing " + "rm -rf %s" % src
         local('rm -rf %s' % src)
         if not is_master:
             manage_solr('solr_' + ts1, 'restart', host='local')
