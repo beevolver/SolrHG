@@ -2,6 +2,23 @@ Usage:
 
 echo 'install JDK'
 
+wget  --no-cookies --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F" "http://download.oracle.com/otn-pub/java/jdk/7u4-b20/jdk-7u4-linux-x64.tar.gz"
+
+tar -xvf jdk-7u4-linux-x64.tar.gz
+
+cd jdk1.7.0_04/
+
+sudo mv jdk1.7.0_04 /usr/lib/jvm/
+
+sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/bin/java" 1
+sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/bin/javac" 1
+sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/lib/jvm/bin/javaws" 1
+sudo update-alternatives --install "/usr/bin/jps" "jps" "/usr/lib/jvm/bin/jps" 1
+
+java -version
+
+echo 'if Java installed successfully, move on to next step'
+
 Install Apache and update the path in roll.py (EXAMPLE_PATH)
 wget http://mirror.metrocast.net/apache/lucene/solr/3.5.0/apache-solr-3.5.0.tgz
 
