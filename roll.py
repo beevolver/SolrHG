@@ -8,7 +8,7 @@ from fabric.operations import put
 import os, re
 from datetime import datetime, timedelta
 
-EXAMPLE_PATH = '/mnt/apache-solr-3.5.0'
+EXAMPLE_PATH = '/solr/apache-solr-3.5.0'
 INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
@@ -29,7 +29,7 @@ def next_time_slice(t):
 def memory_to_solr():
     #/proc/meminfo has a line like - MemTotal:  509084 kB
     parts = len(slices) + 1 # give equal memory to each slice and for OS
-    return run("cat /proc/meminfo | grep MemTotal | awk '{ print $(NF-1)/%d $NF }' | tr -d 'B' " % parts)
+    return run("cat /proc/meminfo | grep MemTotal | awk '{ printf "%d%s", $(NF-1)/5, $NF }' | tr -d 'B' " % parts)
 
 def merge(src, dest, class_path):
     #merge src and dest into dest
@@ -93,7 +93,7 @@ def create_cron_jobs():
         if not fab:
             install_fab()
             fab = run('which fab')
-        user = 'ubuntu'
+        user = 'beeadmin'
         cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         a = re.match(re_ts, ts)
@@ -133,7 +133,7 @@ def create_cron_jobs():
         else:
             d['days'] = number*30
         # delete every saturday mid-night
-        cron_line = '0 0 * * 6 ubuntu %s %s %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
+        cron_line = '0 0 * * 6 beeadmin %s %s %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
         return cron_line
     
     for ts in slices[:-1]:
