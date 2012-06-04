@@ -20,5 +20,5 @@ stop on shutdown
 # Respawn the process on unexpected termination
 respawn
 
-exec /usr/bin/java -mx${MEM} -Dsolr.solr.home=$SOLR_HOME/solr -Djetty.home=$SOLR_HOME -jar $SOLR_HOME/start.jar >> $LOG_FILE 2>&1
+exec /usr/bin/java -mx${MEM} -Dsolr.solr.home=$SOLR_HOME/solr -Djetty.home=$SOLR_HOME -Dorg.mortbay.jetty.webapp.parentLoaderPriority=true -jar $SOLR_HOME/start.jar >> $LOG_FILE 2>&1
 END
