@@ -29,7 +29,7 @@ def next_time_slice(t):
 def memory_to_solr():
     #/proc/meminfo has a line like - MemTotal:  509084 kB
     parts = len(slices) + 1 # give equal memory to each slice and for OS
-    return run("cat /proc/meminfo | grep MemTotal | awk '{ printf "%d%s", $(NF-1)/5, $NF }' | tr -d 'B' " % parts)
+    return run("cat /proc/meminfo | grep MemTotal | awk '{ printf " + '"%d%s", ' + "$(NF-1)/%s, $NF }' | tr -d 'B' " % parts)
 
 def merge(src, dest, class_path):
     #merge src and dest into dest
