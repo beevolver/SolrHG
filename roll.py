@@ -175,9 +175,11 @@ def upload_files(path, libs=True):
 
 def make_solr_instance(path, port):
     master_port = MASTER_PORT
+    core_name = 'conversation_index' # default core name is "collection1"
     run('mkdir -p %s' % path)
     run('cp -R example/* %s' % path)
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/etc/jetty.xml' % locals())
+    run('perl -pi -e s/collection1/%(core_name)s/g %(path)s/solr/solr.xml' % locals())
     upload_files(path)
     return manage_solr(path, action='start')
 
