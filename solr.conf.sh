@@ -3,6 +3,7 @@
 
 SOLR_HOME=$1
 MEM=$2
+POST_STOP_HG=${3-echo}
 LOG_FILE="/var/log/`basename $SOLR_HOME`"
 cat<<END
 # upstart script to daemonize solr
@@ -21,4 +22,11 @@ stop on shutdown
 respawn
 
 exec /usr/bin/java -mx${MEM} -Dsolr.solr.home=$SOLR_HOME/solr -Djetty.home=$SOLR_HOME -Dorg.mortbay.jetty.webapp.parentLoaderPriority=true -jar $SOLR_HOME/start.jar >> $LOG_FILE 2>&1
+
+post-stop script
+    # nothing will be there below to execute on a non-HG solr
+    # merge the index created by the HG, with the next slice whenever it's stopped
+    $POST_STOP_HG
+end script
+
 END

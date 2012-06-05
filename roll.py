@@ -89,7 +89,7 @@ def manage_solr(path, action='start', host=''):
             post_stop_script = post_stop_hg()
         else:
             post_stop_script = ''
-        sudo('bash solr.conf.sh %s %s %s> %s' % (java_home, memory_to_solr(), post_stop_script, upstart_script))
+        sudo('bash solr.conf.sh %s %s "%s" > %s' % (java_home, memory_to_solr(), post_stop_script, upstart_script))
     if host == 'local':
         local('sudo service %s %s' % (script_name, action))
     else:
