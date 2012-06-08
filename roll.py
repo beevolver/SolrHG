@@ -33,7 +33,8 @@ def post_stop_hg(path):
     ts = slices[0]
     merge_cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
     redirect_logs = ">> %s 2>&1" % LOG_FILE
-    mv2archive = "mv -f %s/solr/index/2012-* %s/solr/archive" % (path, path)
+    path = os.path.join(EXAMPLE_PATH, path)
+    mv2archive = "mv -f %s/solr/data/index/2012-* %s/solr/data/archive/" % (path, path)
     return "%(mv2archive)s && (merge_cmd)s %(redirect_logs)s" % locals()
 
 def memory_to_solr():
