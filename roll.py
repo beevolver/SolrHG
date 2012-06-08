@@ -65,6 +65,9 @@ def merge_slices(ts1, ts2):
     if is_master:
         subdirs = get_subdirs(archive)
         src = ' '.join([os.path.join(archive, subdir) for subdir in subdirs])
+        if not src:
+            print 'nothing to be merged'
+            return 1
     
     # if merge is successful, delete the source and restart the solr
     r = merge(src, dest, class_path=get_lib_path(ts1))
