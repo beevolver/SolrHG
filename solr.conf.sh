@@ -3,7 +3,7 @@
 
 SOLR_HOME=$1
 MEM=$2
-POST_STOP_HG=${3-echo}
+POST_STOP_HG=${3}
 LOG_FILE="/var/log/`basename $SOLR_HOME`"
 cat<<END
 # upstart script to daemonize solr
@@ -25,8 +25,12 @@ exec /usr/bin/java -mx${MEM} -Dsolr.solr.home=$SOLR_HOME/solr -Djetty.home=$SOLR
 
 post-stop script
     # nothing will be there below to execute on a non-HG solr
+if [ "$POST_STOP_HG" ]; then
     # merge the index created by the HG, with the next slice whenever it's stopped
+    echo "after HG is stopped, doing the merge" >> $LOG_FILE 2>&1
     $POST_STOP_HG
+    echo "done with the merge during post-stop" >>  /solr/apache-solr-3.5.0/solrhg.log 2>&1
+fi
 end script
 
 END
