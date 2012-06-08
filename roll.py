@@ -26,14 +26,15 @@ def next_time_slice(t):
     except IndexError, ValueError:
         return None
 
-def post_stop_hg():
+def post_stop_hg(path):
     """ return the command in post-stop script to be put in the upstart script of the solr HG
     """
-    fab = run('which fab')
+    fab = local('which fab')
     ts = slices[0]
-    cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
+    merge_cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
     redirect_logs = ">> %s 2>&1" % LOG_FILE
-    return "%(cmd)s %(redirect_logs)s" % locals()
+    mv2archive = "mv -f %s/solr/index/2012-* %s/solr/archive" % (path, path)
+    return "%(mv2archive)s && (merge_cmd)s %(redirect_logs)s" % locals()
 
 def memory_to_solr():
     #/proc/meminfo has a line like - MemTotal:  509084 kB
@@ -89,7 +90,7 @@ def manage_solr(path, action='start', host=''):
     if not os.path.exists(upstart_script):
         java_home = os.path.join(EXAMPLE_PATH, path)
         if path.endswith(slices[0]):
-            post_stop_script = post_stop_hg()
+            post_stop_script = post_stop_hg(path)
         else:
             post_stop_script = ''
         sudo('bash solr.conf.sh %s %s "%s" > %s' % (java_home, memory_to_solr(), post_stop_script, upstart_script))
