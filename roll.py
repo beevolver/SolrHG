@@ -34,6 +34,7 @@ def post_stop_hg(path):
     merge_cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
     redirect_logs = ">> %s 2>&1" % LOG_FILE
     path = os.path.join(EXAMPLE_PATH, path)
+    # @@ todo: fix this - make 2012-* generic
     mv2archive = "mv -f %s/solr/data/index/2012-* %s/solr/data/archive/" % (path, path)
     return "%(mv2archive)s && (merge_cmd)s %(redirect_logs)s" % locals()
 
