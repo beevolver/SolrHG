@@ -5,7 +5,7 @@ from solr home - where example directory exists.
 
 from fabric.api import run, sudo, abort, cd, task, local, lcd
 from fabric.operations import put
-import os, re
+import os, re, logging
 from datetime import datetime, timedelta
 
 EXAMPLE_PATH = '/solr/apache-solr-3.5.0'
@@ -13,6 +13,11 @@ INDEXDIR = 'solr/data/index/'
 MASTER_PORT = 8983
 SLAVE_START_PORT = 9000
 LOG_FILE = "%s/solrhg.log" % EXAMPLE_PATH
+logging.basicConfig(filename=LOG_FILE,
+                    level=logging.INFO, 
+                    format='[%(asctime)s] %(message)s',
+                    )
+
 # slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
@@ -36,7 +41,7 @@ def post_stop_hg(path):
     path = os.path.join(EXAMPLE_PATH, path)
     # @@ todo: fix this - make 2012-* generic
     mv2archive = "mv -f %s/solr/data/index/2012-* %s/solr/data/archive/" % (path, path)
-    return "%(mv2archive)s && (merge_cmd)s %(redirect_logs)s" % locals()
+    return "%(mv2archive)s && %(merge_cmd)s %(redirect_logs)s" % locals()
 
 def memory_to_solr():
     #/proc/meminfo has a line like - MemTotal:  509084 kB
@@ -46,7 +51,6 @@ def memory_to_solr():
 def merge(src, dest, class_path):
     #merge src and dest into dest
     merge_tool = 'org/apache/lucene/misc/IndexMergeTool'
-    redirect_logs = ">> %s 2>&1" % LOG_FILE
     local("mkdir -p %s" % dest)   # make dest dir if it doesn't exist
     with lcd(EXAMPLE_PATH):
         return local('sudo java -cp %(class_path)s/lucene-core-3.5.0.jar:%(class_path)s/lucene-misc-3.5.0.jar %(merge_tool)s %(dest)s %(src)s %(dest)s' % locals())
@@ -57,6 +61,7 @@ def get_subdirs(path):
 
 @task
 def merge_slices(ts1, ts2):
+    logging.info('attempting to merge slices %s %s' % (ts1, ts2))
     get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
     get_lib_path = lambda t: os.path.join('solr_%s' % t, 'solr/lib') # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     src, dest = get_index_path(ts1), get_index_path(ts2)
@@ -69,13 +74,13 @@ def merge_slices(ts1, ts2):
         subdirs = get_subdirs(archive)
         src = ' '.join([os.path.join(archive, subdir) for subdir in subdirs])
         if not src:
-            print 'nothing to be merged'
+            logging.info('nothing to be merged')
             return 1
     
     # if merge is successful, delete the source and restart the solr
     r = merge(src, dest, class_path=get_lib_path(ts1))
     if r.succeeded:
-        print "Issuing " + "rm -rf %s" % src
+        logging.info("successfully merged - now issuing " + "rm -rf %s" % src)
         local('rm -rf %s' % src)
         if not is_master:
             manage_solr('solr_' + ts1, 'restart', host='local')
@@ -84,7 +89,7 @@ def merge_slices(ts1, ts2):
 def make_upstart_script(path):
     script_name = os.path.basename(path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
-    # make an upstart script from the template solr.conf, if it doesn't exist
+    # make an upstart script from the template solr.conf.sh, if it doesn't exist
     if not os.path.exists(upstart_script):
         java_home = os.path.join(EXAMPLE_PATH, path)
         if path.endswith(slices[0]):
@@ -96,7 +101,7 @@ def make_upstart_script(path):
 def manage_solr(path, action='start', host=''):
     # path is like "solr_1h"
     if action not in ('start', 'stop', 'restart'):
-        print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
+        logging.info("solr to be %sed ? - failing to do so." % action)
         return 1
     make_upstart_script(path)
     if host == 'local':
@@ -155,7 +160,8 @@ def create_cron_jobs():
         else:
             d['days'] = number*30
         # delete every saturday mid-night
-        cron_line = '0 0 * * 6 beeadmin %s %s %s %s %s %s' % (os.path.join(EXAMPLE_PATH, 'delete.sh'), java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
+        delete_script = os.path.join(EXAMPLE_PATH, 'delete.sh')
+        cron_line = '0 0 * * 6 beeadmin %s %s %s %s %s %s' % (delete_script, java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
         return cron_line
     
     for ts in slices[:-1]:
