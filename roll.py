@@ -81,11 +81,7 @@ def merge_slices(ts1, ts2):
             manage_solr('solr_' + ts1, 'restart', host='local')
         return manage_solr('solr_' + ts2, 'restart', host='local')
 
-def manage_solr(path, action='start', host=''):
-    # path is like "solr_1h"
-    if action not in ('start', 'stop', 'restart'):
-        print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
-        return 1
+def make_upstart_script(path):
     script_name = os.path.basename(path)
     upstart_script = "/etc/init/%s.conf" % (script_name)
     # make an upstart script from the template solr.conf, if it doesn't exist
@@ -96,6 +92,13 @@ def manage_solr(path, action='start', host=''):
         else:
             post_stop_script = ''
         sudo('bash solr.conf.sh %s %s "%s" > %s' % (java_home, memory_to_solr(), post_stop_script, upstart_script))
+
+def manage_solr(path, action='start', host=''):
+    # path is like "solr_1h"
+    if action not in ('start', 'stop', 'restart'):
+        print >> sys.stderr, "solr to be %sed ? - failing to do so." % action
+        return 1
+    make_upstart_script(path)
     if host == 'local':
         local('sudo service %s %s' % (script_name, action))
     else:
