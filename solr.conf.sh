@@ -27,8 +27,10 @@ post-stop script
     # nothing will be there below to execute on a non-HG solr
 if [ "$POST_STOP_HG" ]; then
     # merge the index created by the HG, with the next slice whenever it's stopped
+    date
     echo "after HG is stopped, doing the merge" >> $LOG_FILE 2>&1
     $POST_STOP_HG
+    date
     echo "done with the merge during post-stop" >>  /solr/apache-solr-3.5.0/solrhg.log 2>&1
 fi
 end script
