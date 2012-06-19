@@ -200,7 +200,11 @@ def make_solr_instance(path, port):
     run('perl -pi -e s/%(master_port)d/%(port)d/g %(path)s/etc/jetty.xml' % locals())
     run('perl -pi -e s/collection1/%(core_name)s/g %(path)s/solr/solr.xml' % locals())
     upload_files(path)
-    return manage_solr(path, action='start')
+    manage_solr(path, action='start')
+    # copy the zoie related libs to jetty's WEB-INF/lib to avoid IllegalAccessError
+    # Jetty_blah_blah is created only while starting solr - so, copy these after solr has started.
+    run('cp solr_%s/solr/lib/zoie-*.jar %s/work/Jetty_*_solr.war*/webapp/WEB-INF/lib/' % (slices[0], path))
+    return manage_solr(path, action='restart')
 
 @task
 def make_rolling_index(*argv):
