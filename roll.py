@@ -5,18 +5,16 @@ from solr home - where example directory exists.
 
 from fabric.api import run, sudo, abort, cd, task, local, lcd
 from fabric.operations import put
-import os, re, logging
+import os, re
 from datetime import datetime, timedelta
 from config import *
-
-logging.basicConfig(filename=LOG_FILE,
-                    level=logging.INFO, 
-                    format='[%(asctime)s] %(message)s',
-                    )
 
 # slices[0] would be the master where hourglass is running.
 slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
+
+def log_info(msg):
+    run("(date && echo %s)" >> LOG_FILE)
 
 def set_tz():
     return "TZ=US/Eastern\n"
@@ -57,7 +55,7 @@ def get_subdirs(path):
 
 @task
 def merge_slices(ts1, ts2):
-    logging.info('attempting to merge slices %s %s' % (ts1, ts2))
+    log_info('attempting to merge slices %s %s' % (ts1, ts2))
     get_index_path = lambda t: os.path.join('solr_%s' % t, 'solr/data/index')
     get_lib_path = lambda t: os.path.join('solr_%s' % t, 'solr/lib') # path to lucene-core-<version>.jar and lucene-misc-<version>.jar
     src, dest = get_index_path(ts1), get_index_path(ts2)
@@ -70,13 +68,13 @@ def merge_slices(ts1, ts2):
         subdirs = get_subdirs(archive)
         src = ' '.join([os.path.join(archive, subdir) for subdir in subdirs])
         if not src:
-            logging.info('nothing to be merged')
+            log_info('nothing to be merged')
             return 1
     
     # if merge is successful, delete the source and restart the solr
     r = merge(src, dest, class_path=get_lib_path(ts1))
     if r.succeeded:
-        logging.info("successfully merged - now issuing " + "rm -rf %s" % src)
+        log_info("successfully merged - now issuing " + "rm -rf %s" % src)
         local('rm -rf %s' % src)
         if not is_master:
             manage_solr('solr_' + ts1, 'restart', host='local')
@@ -97,7 +95,7 @@ def make_upstart_script(path):
 def manage_solr(path, action='start', host=''):
     # path is like "solr_1h"
     if action not in ('start', 'stop', 'restart'):
-        logging.info("solr to be %sed ? - failing to do so." % action)
+        log_info("solr to be %sed ? - failing to do so." % action)
         return 1
     make_upstart_script(path)
     if host == 'local':
