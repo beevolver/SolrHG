@@ -7,12 +7,8 @@ from fabric.api import run, sudo, abort, cd, task, local, lcd
 from fabric.operations import put
 import os, re, logging
 from datetime import datetime, timedelta
+from config import *
 
-EXAMPLE_PATH = '/solr/apache-solr-3.5.0'
-INDEXDIR = 'solr/data/index/'
-MASTER_PORT = 8983
-SLAVE_START_PORT = 9000
-LOG_FILE = "%s/solrhg.log" % EXAMPLE_PATH
 logging.basicConfig(filename=LOG_FILE,
                     level=logging.INFO, 
                     format='[%(asctime)s] %(message)s',
@@ -120,7 +116,6 @@ def create_cron_jobs():
         if not fab:
             install_fab()
             fab = run('which fab')
-        user = 'beeadmin'
         cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         a = re.match(re_ts, ts)
@@ -143,7 +138,7 @@ def create_cron_jobs():
         if d['hour'] == '0':
             d['hour'] = str(len(slices) - slices.index(ts))
         
-        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], user, cmd, redirect_logs])
+        return ' '.join([d['min'], d['hour'], d['day'], d['month'], d['dow'], USER, cmd, redirect_logs])
 
     def get_last_slice_cron(ts):
         # returns content to be put in cron file which deletes old records every midnight
@@ -161,7 +156,7 @@ def create_cron_jobs():
             d['days'] = number*30
         # delete every saturday mid-night
         delete_script = os.path.join(EXAMPLE_PATH, 'delete.sh')
-        cron_line = '0 0 * * 6 beeadmin %s %s %s %s %s %s' % (delete_script, java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
+        cron_line = '0 0 * * 6 %s %s %s %s %s %s %s' % (USER, delete_script, java_home, d['hours'], d['days'], d['weeks'], redirect_logs)
         return cron_line
     
     for ts in slices[:-1]:
