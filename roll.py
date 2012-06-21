@@ -28,7 +28,7 @@ def next_time_slice(t):
 def post_stop_hg(path):
     """ return the command in post-stop script to be put in the upstart script of the solr HG
     """
-    fab = local('which fab')
+    fab = run('which fab')
     ts = slices[0]
     merge_cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
     redirect_logs = ">> %s 2>&1" % LOG_FILE
@@ -91,19 +91,20 @@ def make_upstart_script(path):
         else:
             post_stop_script = ''
         sudo('bash solr.conf.sh %s %s "%s" > %s' % (java_home, memory_to_solr(), post_stop_script, upstart_script))
+    return script_name
 
 def manage_solr(path, action='start', host=''):
     # path is like "solr_1h"
     if action not in ('start', 'stop', 'restart'):
         log_info("solr to be %sed ? - failing to do so." % action)
         return 1
-    make_upstart_script(path)
+    script_name = make_upstart_script(path)
     if host == 'local':
         local('sudo service %s %s' % (script_name, action))
     else:
         sudo('service %s %s' % (script_name, action))
 
-def install_fab():
+def install_deps():
     sudo('apt-get install build-essential python-dev python-pip')
     sudo('pip install fabric')
 
@@ -111,9 +112,6 @@ def create_cron_jobs():
     def create_cron_line(ts):
         d = dict(min='0', hour='*', day='*', month='*', dow='*')
         fab = run('which fab')
-        if not fab:
-            install_fab()
-            fab = run('which fab')
         cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
         redirect_logs = ">> %s 2>&1" % LOG_FILE
         a = re.match(re_ts, ts)
@@ -177,7 +175,7 @@ def get_timeslices(args):
             return usage()
     return args
 
-def upload_files(path, libs=True):
+def upload_files(path, libs=False):
     # upload all the necessary files
     # apache-solr-3.5.0
     put('solr.conf.sh', 'solr.conf.sh')
@@ -205,7 +203,7 @@ def make_solr_instance(path, port):
     manage_solr(path, action='start')
     # copy the zoie related libs to jetty's WEB-INF/lib to avoid IllegalAccessError
     # Jetty_blah_blah is created only while starting solr - so, copy these after solr has started.
-    run('cp solr_%s/solr/lib/zoie-*.jar %s/work/Jetty_*_solr.war*/webapp/WEB-INF/lib/' % (slices[0], path))
+    sudo('cp solr_%s/solr/lib/zoie-*.jar %s/work/Jetty_*_solr.war*/webapp/WEB-INF/lib/' % (slices[0], path))
     return manage_solr(path, action='restart')
 
 @task
@@ -213,6 +211,7 @@ def make_rolling_index(*argv):
     global slices
     slices = get_timeslices(argv)
     with cd(EXAMPLE_PATH):
+        install_deps()
         make_solr_instance('solr_' + slices[0], MASTER_PORT)
         port = SLAVE_START_PORT
         for ts in slices[1:]:
