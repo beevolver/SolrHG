@@ -190,7 +190,7 @@ def upload_files(path, libs=False):
             put('vendor/lib', '%s/solr/' % path)
     else:
         put('conf/non_hg_solrconfig.xml', os.path.join(solrconf_path, 'solrconfig.xml'))
-        run('ln -sf solr_%s/solr/lib %s/solr/lib' % (slices[0], path))
+        run('ln -sf $PWD/solr_%s/solr/lib %s/solr/lib' % (slices[0], path))
 
 def make_solr_instance(path, port):
     master_port = MASTER_PORT
