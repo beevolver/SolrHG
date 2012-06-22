@@ -203,7 +203,7 @@ def make_solr_instance(path, port):
     manage_solr(path, action='start')
     # copy the zoie related libs to jetty's WEB-INF/lib to avoid IllegalAccessError
     # Jetty_blah_blah is created only while starting solr - so, copy these after solr has started.
-    sudo('cp solr_%s/solr/lib/zoie-*.jar %s/work/Jetty_*_solr.war*/webapp/WEB-INF/lib/' % (slices[0], path))
+    sudo('cp solr_%s/solr/lib/*.jar %s/work/Jetty_*_solr.war*/webapp/WEB-INF/lib/' % (slices[0], path))
     return manage_solr(path, action='restart')
 
 @task
