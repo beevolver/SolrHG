@@ -175,7 +175,7 @@ def get_timeslices(args):
             return usage()
     return args
 
-def upload_files(path, libs=False):
+def upload_files(path, libs=True):
     # upload all the necessary files
     # apache-solr-3.5.0
     put('solr.conf.sh', 'solr.conf.sh')
