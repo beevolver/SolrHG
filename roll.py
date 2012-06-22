@@ -211,7 +211,7 @@ def make_rolling_index(*argv):
     global slices
     slices = get_timeslices(argv)
     with cd(EXAMPLE_PATH):
-        install_deps()
+        #install_deps()
         make_solr_instance('solr_' + slices[0], MASTER_PORT)
         port = SLAVE_START_PORT
         for ts in slices[1:]:
