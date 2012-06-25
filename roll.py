@@ -181,6 +181,7 @@ def upload_files(path, libs=True):
     put('solr.conf.sh', 'solr.conf.sh')
     put('roll.py', 'roll.py')
     put('delete.sh', 'delete.sh')
+    put('config.py', 'config.py')
 
     solrconf_path = '%s/solr/conf/' % path
     put('conf/schema.xml', solrconf_path)
