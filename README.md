@@ -1,5 +1,21 @@
 Usage:
 
+To make rolling indices in solr using HourGlass, check this repo out and from solrhg directory,
+$fab -i <private_key.pem> -H <user>@<host> -f roll.py make_rolling_index:1d,1w,1m,6m
+
+To clean everything up, which was installed by this script
+$fab -i <private_key.pem> -H <user>@<host> -f roll.py cleanup
+
+Before running the fab command, do the following on the server,
+
+    1. Make sure that the line starting with "cron.*  " in /etc/rsyslog.d/50-default.conf is NOT commented, so that we get to see the cron logs in /var/log/cron.log
+    2. apt-get install build-essential python-dev python-pip
+        pip install fabric
+    3. Change the default settings of USER (default: beeadmin), PATH(default:/solr/apache-solr-3.5.0) etc in config.py.
+
+
+--
+--
 echo 'Add User beeadmin'
 
 useradd -m beeadmin
@@ -48,11 +64,6 @@ tar -xvf apache-solr-3.5.0.tgz
 
 echo 'Install python-pip, build-essential, python-dev, fabric'
 
-To make rolling indices in solr using HourGlass, check this repo out and from solrhg directory,
-$fab -i <private_key.pem> -H <host> -f roll.py make_rolling_index:<1d,1w,1m,6m>
-
-To clean everything up, which was installed by this script
-$fab -i <private_key.pem> -H <host> -f roll.py cleanup
 
 How it works:
 
