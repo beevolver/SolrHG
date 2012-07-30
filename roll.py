@@ -25,6 +25,10 @@ def next_time_slice(t):
     except IndexError, ValueError:
         return None
 
+def get_hg_dirs(path):
+    #gets all subdirs in path of the form 2012-07-29-00-00-00 etc
+    return glob.glob(os.path.join(path, '[0-9]*-[0-9]*-[0-9]*-*'))
+
 def post_stop_hg(path):
     """ return the command in post-stop script to be put in the upstart script of the solr HG
     """
@@ -33,8 +37,8 @@ def post_stop_hg(path):
     merge_cmd = "%s -f %s/roll.py merge_slices:%s,%s" % (fab, EXAMPLE_PATH, ts, next_time_slice(ts))
     redirect_logs = ">> %s 2>&1" % LOG_FILE
     path = os.path.join(EXAMPLE_PATH, path)
-    # @@ todo: fix this - make 2012-* generic
-    mv2archive = "mv -f %s/solr/data/index/2012-* %s/solr/data/archive/" % (path, path)
+    src = ' '.join(get_hg_dirs(path))
+    mv2archive = "mv -f %s %s/solr/data/archive/" % (src, path)
     return "%(mv2archive)s && %(merge_cmd)s %(redirect_logs)s" % locals()
 
 def memory_to_solr():
