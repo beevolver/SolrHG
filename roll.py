@@ -14,7 +14,7 @@ slices = []
 re_ts = r"(?P<number>\d+)(?P<period>[hdwm]{1})$"
 
 def log_info(msg):
-    run("(date && echo %s)" >> LOG_FILE)
+    run("(date && echo %s) >> %s " % (msg, LOG_FILE))
 
 def set_tz():
     return "TZ=US/Eastern\n"
