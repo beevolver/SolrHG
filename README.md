@@ -75,6 +75,7 @@ java -cp $classpath/lucene-core-3.5.0.jar:$classpath/lucene-misc-3.5.0.jar org/a
 
 For example, to merge 1w slice with a 1m slice, you do
 EXAMPLE_PATH=/solr/apache-solr-3.5.0
+classpath=/solr/apache-solr-3.5.0/solr_1d/solr/lib
 java -cp $classpath/lucene-core-3.5.0.jar:$classpath/lucene-misc-3.5.0.jar org/apache/lucene/misc/IndexMergeTool $EXAMPLE_PATH/solr_1m/solr/data/index/  $EXAMPLE_PATH/solr_1m/solr/data/index/  $EXAMPLE_PATH/solr_1w/solr/data/index/  
 
 and delete the index at $EXAMPLE_PATH/solr_1w/solr/data/index/  and restart both solr_1w and solr_1m
