@@ -65,13 +65,17 @@ tar -xvf apache-solr-3.5.0.tgz
 echo 'Install python-pip, build-essential, python-dev, fabric'
 
 
-How it works:
+--------------------------
+Manual merge: Assuming that the EXAMPLE_PATH is /solr/apache-solr-3.5.0/
 
+classpath=/solr/apache-solr-3.5.0/solr_1d/solr/lib
+java -cp $classpath/lucene-core-3.5.0.jar:$classpath/lucene-misc-3.5.0.jar org/apache/lucene/misc/IndexMergeTool /path/to/newindex /path/to/index1 /path/to/index2
 
+/solr/apache-solr-3.5.0/solr_1w/solr/data/index/
 
+For example, to merge 1w slice with a 1m slice, you do
+EXAMPLE_PATH=/solr/apache-solr-3.5.0
+java -cp $classpath/lucene-core-3.5.0.jar:$classpath/lucene-misc-3.5.0.jar org/apache/lucene/misc/IndexMergeTool $EXAMPLE_PATH/solr_1m/solr/data/index/  $EXAMPLE_PATH/solr_1m/solr/data/index/  $EXAMPLE_PATH/solr_1w/solr/data/index/  
 
-Design Considerations:
+and delete the index at $EXAMPLE_PATH/solr_1w/solr/data/index/  and restart both solr_1w and solr_1m
 
-
-
-TO-DOs:

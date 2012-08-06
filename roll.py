@@ -5,7 +5,7 @@ from solr home - where example directory exists.
 
 from fabric.api import run, sudo, abort, cd, task, local, lcd
 from fabric.operations import put
-import os, re
+import os, re, glob
 from datetime import datetime, timedelta
 from config import *
 
