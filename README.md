@@ -62,8 +62,9 @@ cd /solr
 
 tar -xvf apache-solr-3.5.0.tgz 
 
-echo 'Install python-pip, build-essential, python-dev, fabric'
 
+sudo apt-get install python-pip build-essential python-dev 
+sudo pip install fabric 
 
 --------------------------
 Manual merge: Assuming that the EXAMPLE_PATH is /solr/apache-solr-3.5.0/
@@ -79,4 +80,9 @@ classpath=/solr/apache-solr-3.5.0/solr_1d/solr/lib
 java -cp $classpath/lucene-core-3.5.0.jar:$classpath/lucene-misc-3.5.0.jar org/apache/lucene/misc/IndexMergeTool $EXAMPLE_PATH/solr_1m/solr/data/index/  $EXAMPLE_PATH/solr_1m/solr/data/index/  $EXAMPLE_PATH/solr_1w/solr/data/index/  
 
 and delete the index at $EXAMPLE_PATH/solr_1w/solr/data/index/  and restart both solr_1w and solr_1m
+
+
+TODOs:
+
+1. In /etc/rsyslog.d/50-*, uncomment the cron.log line
 
